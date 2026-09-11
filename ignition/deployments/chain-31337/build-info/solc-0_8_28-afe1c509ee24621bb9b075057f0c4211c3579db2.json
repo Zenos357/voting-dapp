@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-afe1c509ee24621bb9b075057f0c4211c3579db2",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.14.0"
+  },
+  "userSourceNameMap": {
+    "contracts/Voting.sol": "project/contracts/Voting.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/Voting.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.20;\r\n\r\ncontract Voting {\r\n    struct Candidate {\r\n        uint256 id;\r\n        string name;\r\n        uint256 voteCount;\r\n    }\r\n\r\n    address public owner;\r\n    uint256 public candidatesCount;\r\n    mapping(uint256 => Candidate) public candidates;\r\n    mapping(address => bool) public hasVoted;\r\n\r\n    event Voted(address indexed voter, uint256 indexed candidateId);\r\n    event CandidateAdded(uint256 indexed candidateId, string name);\r\n\r\n    modifier onlyOwner() {\r\n        require(msg.sender == owner, \"Only owner can perform this action\");\r\n        _;\r\n    }\r\n\r\n    constructor() {\r\n        owner = msg.sender;\r\n        // Default initial candidates\r\n        addCandidateInternal(\"Candidate Alpha\");\r\n        addCandidateInternal(\"Candidate Beta\");\r\n    }\r\n\r\n    function addCandidateInternal(string memory _name) internal {\r\n        candidatesCount++;\r\n        candidates[candidatesCount] = Candidate(candidatesCount, _name, 0);\r\n        emit CandidateAdded(candidatesCount, _name);\r\n    }\r\n\r\n    // Admin-only function to register new candidates dynamically\r\n    function addCandidate(string memory _name) public onlyOwner {\r\n        require(bytes(_name).length > 0, \"Candidate name cannot be empty\");\r\n        addCandidateInternal(_name);\r\n    }\r\n\r\n    function vote(uint256 _candidateId) public {\r\n        require(!hasVoted[msg.sender], \"You have already voted.\");\r\n        require(_candidateId > 0 && _candidateId <= candidatesCount, \"Invalid candidate ID.\");\r\n\r\n        hasVoted[msg.sender] = true;\r\n        candidates[_candidateId].voteCount++;\r\n\r\n        emit Voted(msg.sender, _candidateId);\r\n    }\r\n}"
+      }
+    }
+  }
+}
