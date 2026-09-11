@@ -13,8 +13,9 @@ export async function seedDatabase() {
   try {
     console.log('🌱 Starting Database Seeding...');
     if (mongoose.connection.readyState !== 1) {
-      await mongoose.connect(config.mongodb.uri);
-    }
+  const { connectDatabase } = await import('../config/database.js');
+  await connectDatabase();
+}
 
     // 1. Clear existing collections (optional/clean seed)
     await Promise.all([
