@@ -1,0 +1,41 @@
+export const ELECTION_STATUS = {
+  DRAFT: 'DRAFT',
+  NOMINATION_OPEN: 'NOMINATION_OPEN',
+  NOMINATION_CLOSED: 'NOMINATION_CLOSED',
+  READY_FOR_VOTING: 'READY_FOR_VOTING',
+  VOTING_LIVE: 'VOTING_LIVE',
+  VOTING_CLOSED: 'VOTING_CLOSED',
+  RESULT_PUBLISHED: 'RESULT_PUBLISHED',
+  ARCHIVED: 'ARCHIVED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type ElectionStatusType = (typeof ELECTION_STATUS)[keyof typeof ELECTION_STATUS];
+
+export const VALID_TRANSITIONS: Record<ElectionStatusType, ElectionStatusType[]> = {
+  DRAFT: ['NOMINATION_OPEN', 'CANCELLED'],
+  NOMINATION_OPEN: ['NOMINATION_CLOSED', 'CANCELLED'],
+  NOMINATION_CLOSED: ['READY_FOR_VOTING', 'NOMINATION_OPEN', 'CANCELLED'],
+  READY_FOR_VOTING: ['VOTING_LIVE', 'CANCELLED'],
+  VOTING_LIVE: ['VOTING_CLOSED'],
+  VOTING_CLOSED: ['RESULT_PUBLISHED'],
+  RESULT_PUBLISHED: ['ARCHIVED'],
+  ARCHIVED: [],
+  CANCELLED: [],
+};
+
+export function isValidTransition(from: ElectionStatusType, to: ElectionStatusType): boolean {
+  return VALID_TRANSITIONS[from]?.includes(to) ?? false;
+}
+
+export const ELECTION_TYPES = {
+  NATIONAL: 'NATIONAL',
+  STATE: 'STATE',
+  MUNICIPAL: 'MUNICIPAL',
+  COLLEGE: 'COLLEGE',
+  ORGANIZATION: 'ORGANIZATION',
+  MOCK: 'MOCK',
+  OTHER: 'OTHER',
+} as const;
+
+export type ElectionType = (typeof ELECTION_TYPES)[keyof typeof ELECTION_TYPES];
