@@ -19,27 +19,27 @@ export default function App() {
   // Persistent candidates
   const [candidates, setCandidates] = useState(() => {
     try {
-      const saved = localStorage.getItem("dapp_candidates_v4");
+      const saved = localStorage.getItem("dapp_candidates_v5");
       return saved ? JSON.parse(saved) : DEFAULT_CANDIDATES;
     } catch {
       return DEFAULT_CANDIDATES;
     }
   });
 
-  // Persistent tracking of voters who voted
-  const [votedAccounts, setVotedAccounts] = useState(() => {
+  // Persistent tracking of which Voter IDs have cast a ballot
+  const [votedVoters, setVotedVoters] = useState(() => {
     try {
-      const saved = localStorage.getItem("dapp_voted_accounts_v4");
+      const saved = localStorage.getItem("dapp_voted_voters_v5");
       return saved ? JSON.parse(saved) : {};
     } catch {
       return {};
     }
   });
 
-  // Persistent Audit Database (records voter ID, chosen candidate, wallet & timestamp)
+  // Persistent Audit Database (records voter ID, candidate, wallet & timestamp)
   const [voteDatabase, setVoteDatabase] = useState(() => {
     try {
-      const saved = localStorage.getItem("dapp_audit_database_v4");
+      const saved = localStorage.getItem("dapp_audit_database_v5");
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -49,19 +49,16 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [statusLog, setStatusLog] = useState("System standby. Awaiting credential verification.");
 
-  // Sync candidate counts to permanent local storage
   useEffect(() => {
-    localStorage.setItem("dapp_candidates_v4", JSON.stringify(candidates));
+    localStorage.setItem("dapp_candidates_v5", JSON.stringify(candidates));
   }, [candidates]);
 
-  // Sync voted status per account/ID to permanent local storage
   useEffect(() => {
-    localStorage.setItem("dapp_voted_accounts_v4", JSON.stringify(votedAccounts));
-  }, [votedAccounts]);
+    localStorage.setItem("dapp_voted_voters_v5", JSON.stringify(votedVoters));
+  }, [votedVoters]);
 
-  // Sync vote database records
   useEffect(() => {
-    localStorage.setItem("dapp_audit_database_v4", JSON.stringify(voteDatabase));
+    localStorage.setItem("dapp_audit_database_v5", JSON.stringify(voteDatabase));
   }, [voteDatabase]);
 
   // Off-Chain Identity Verification
@@ -92,7 +89,7 @@ export default function App() {
     setStatusLog("Session terminated. Signer disconnected.");
   };
 
-  // Admin: Add Candidate
+  // Admin Candidate Addition
   const handleAddCandidate = (e) => {
     e.preventDefault();
     if (!newCandidateName.trim()) return;
@@ -112,27 +109,26 @@ export default function App() {
   // Admin Privilege: Reset All Election Data for Re-demo
   const handleResetElection = () => {
     const confirmReset = window.confirm(
-      "Admin Action: Are you sure you want to purge all votes, audit ledger records, and reset the candidates back to default for a new demo run?"
+      "Admin Action: Are you sure you want to purge all votes, audit ledger records, and reset the candidates back to default?"
     );
     if (!confirmReset) return;
 
-    localStorage.removeItem("dapp_candidates_v4");
-    localStorage.removeItem("dapp_voted_accounts_v4");
-    localStorage.removeItem("dapp_audit_database_v4");
+    localStorage.removeItem("dapp_candidates_v5");
+    localStorage.removeItem("dapp_voted_voters_v5");
+    localStorage.removeItem("dapp_audit_database_v5");
 
     setCandidates(DEFAULT_CANDIDATES);
-    setVotedAccounts({});
+    setVotedVoters({});
     setVoteDatabase([]);
-    setStatusLog("Admin Action: All election data, tallies, and voter locks have been cleared. Platform reset to default.");
+    setStatusLog("Admin Action: All election data and tallies have been cleared.");
   };
 
-  // Check if current user or connected wallet has already cast a ballot
+  // Current voter has voted ONLY if their specific Voter ID was recorded
   const hasCurrentVoterVoted = Boolean(
-    (authProfile && votedAccounts[authProfile.username]) ||
-    (account && votedAccounts[account.toLowerCase()])
+    authProfile && votedVoters[authProfile.username]
   );
 
-  // Retrieve current voter's receipt from database
+  // Retrieve current voter's receipt
   const myVoteRecord = authProfile
     ? voteDatabase.find((rec) => rec.voterId === authProfile.username)
     : null;
@@ -196,11 +192,10 @@ export default function App() {
         prev.map((c) => (c.id === candidateId ? { ...c, voteCount: c.voteCount + 1 } : c))
       );
 
-      // 2. Mark this voter and wallet as sealed
-      setVotedAccounts((prev) => ({
+      // 2. Mark ONLY this specific voter ID as voted
+      setVotedVoters((prev) => ({
         ...prev,
         [authProfile.username]: true,
-        [account.toLowerCase()]: true,
       }));
 
       // 3. Log into persistent Vote Audit Database
@@ -279,9 +274,6 @@ export default function App() {
         {!authProfile ? (
           <div style={styles.card}>
             <h2 style={styles.cardHeading}>Phase 1: Voter Identity Verification</h2>
-            <p style={styles.cardDesc}>
-              Authenticate with your institutional account. Use <strong>user_00</strong> for Administrator Controls or <strong>voter_01</strong>, <strong>voter_02</strong>, <strong>voter_03</strong> for Student Ballots.
-            </p>
             {authError && <div style={styles.alertDanger}>{authError}</div>}
             <form onSubmit={handleLogin} style={styles.formGroup}>
               <div>
@@ -562,8 +554,7 @@ const styles = {
     marginBottom: "1.5rem",
     boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
   },
-  cardHeading: { fontSize: "1.2rem", fontWeight: "700", color: "#0f172a", margin: 0 },
-  cardDesc: { color: "#64748b", fontSize: "0.9rem", marginTop: "0.35rem", marginBottom: "1.25rem" },
+  cardHeading: { fontSize: "1.2rem", fontWeight: "700", color: "#0f172a", margin: "0 0 1.25rem 0" },
   formGroup: { maxWidth: "480px" },
   label: { display: "block", fontSize: "0.85rem", fontWeight: "600", color: "#334155", marginBottom: "0.4rem" },
   input: {
